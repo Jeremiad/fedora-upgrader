@@ -20,9 +20,9 @@ jobs:
     - name: Restore dependencies
       run: dotnet restore
     - name: Build Linux version
-      run: dotnet publish -c Release -r linux-x64 -p:PublishSingleFile=true -p:PublishTrimmed=true --self-contained=true --output ./
+      run: dotnet publish -c Release -r linux-x64 -p:PublishSingleFile=true -p:PublishTrimmed=true --self-contained=true --output ./publish
     - name: Upload a Build Artifact
       uses: actions/upload-artifact@v2.2.3
       with:
         name: fedora-upgrader
-        path: fedora-upgrader
+        path: ./publish/fedora-upgrader
