@@ -21,8 +21,8 @@ namespace fedora_upgrader
             {
                 if (args[0] == "upgrade")
                 {
-                    int currentVersion = await GetCurrentVersion();
                     int localVersion = await GetLocalVersion();
+                    int currentVersion = await GetCurrentVersion();
                     if (localVersion < currentVersion)
                     {
                         Upgrade(currentVersion);
@@ -76,6 +76,7 @@ namespace fedora_upgrader
             var regex = new Regex("[0-9]+");
             List<ushort> versions = new List<ushort>();
             var html = await httpClient.GetStringAsync(url);
+            httpClient.Dispose();
             document.LoadHtml(html);
             var nodes = document.DocumentNode.SelectNodes("//a/@href");
 
@@ -96,7 +97,6 @@ namespace fedora_upgrader
             var strversion = regex.Match(fedoraRelease);
             Console.WriteLine($"Local version: {strversion}");
             return int.Parse(strversion.Value);
-
         }
         private static void RunCommands(List<string> commands)
         {
