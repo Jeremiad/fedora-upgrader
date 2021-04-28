@@ -1,0 +1,7 @@
+{
+  "profiles": {
+    "fedora-upgrader": {
+      "commandName": "Project"
+    }
+  }
+}
