@@ -7,19 +7,30 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using System.Diagnostics;
 using System.Text;
+using System.IO;
 
 namespace fedora_upgrader
 {
     class Program
     {
-        private const string url = "http://www.nic.funet.fi/pub/mirrors/fedora.redhat.com/pub/fedora/linux/releases/";
+        //private const string url = "http://www.nic.funet.fi/pub/mirrors/fedora.redhat.com/pub/fedora/linux/releases/";
+        private const string url = "https://ftp.halifax.rwth-aachen.de/fedora/linux/releases/";
         static async Task Main(string[] args)
         {
             if (args.FirstOrDefault() != null)
             {
                 if (args[0] == "upgrade")
                 {
-                    Upgrade(await GetCurrentVersion());
+                    int currentVersion = await GetCurrentVersion();
+                    int localVersion = await GetLocalVersion();
+                    if (localVersion < currentVersion)
+                    {
+                        Upgrade(currentVersion);
+                    }
+                    else
+                    {
+                        Console.WriteLine($"Local version is {localVersion} and current is {currentVersion}. No need to upgrade");
+                    }
                 }
                 if (args[0] == "postupgrade") 
                 {
@@ -78,7 +89,15 @@ namespace fedora_upgrader
             Console.WriteLine("Latest version: {0}", versions.OrderByDescending(n => n).FirstOrDefault());
             return versions.OrderByDescending(n => n).FirstOrDefault();
         }
+        private static async Task<int> GetLocalVersion()
+        {
+            string fedoraRelease = await File.ReadAllTextAsync("/etc/fedora-release");
+            var regex = new Regex("[0-9]+");
+            var strversion = regex.Match(fedoraRelease);
+            Console.WriteLine($"Local version: {strversion}");
+            return int.Parse(strversion.Value);
 
+        }
         private static void RunCommands(List<string> commands)
         {
             foreach(var command in commands)
