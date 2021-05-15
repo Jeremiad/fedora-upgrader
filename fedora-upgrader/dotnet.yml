@@ -21,3 +21,8 @@ jobs:
       run: dotnet restore
     - name: Build
       run: dotnet build --no-restore
+    - uses: ncipollo/release-action@v1
+      with:
+        artifacts: "fedora-upgrader"
+        bodyFile: "body.md"
+        token: ${{ secrets.GITHUB_TOKEN }}

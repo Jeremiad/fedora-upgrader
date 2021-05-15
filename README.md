@@ -6,3 +6,6 @@ Tool for running Fedora upgrade and Post-upgrade process described on page: http
 
 ## Optional post-upgrade tasks
 ``` fedora-upgrade post-upgrade ```
+
+
+[![.NET](https://github.com/Jeremiad/fedora-upgrader/actions/workflows/dotnet.yml/badge.svg)](https://github.com/Jeremiad/fedora-upgrader/actions/workflows/dotnet.yml)
