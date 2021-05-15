@@ -32,7 +32,7 @@ namespace fedora_upgrader
                         Console.WriteLine($"Local version is {localVersion} and current is {currentVersion}. No need to upgrade");
                     }
                 }
-                if (args[0] == "postupgrade") 
+                if (args[0] == "post-upgrade") 
                 {
                     PostUpgrade();
                 }
