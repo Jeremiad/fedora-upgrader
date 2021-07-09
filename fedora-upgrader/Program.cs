@@ -29,7 +29,7 @@ namespace fedora_upgrader
                     }
                     else
                     {
-                        Console.WriteLine($"Local version is {localVersion} and current is {currentVersion}. No need to upgrade");
+                        Console.WriteLine($"Local version is {localVersion} and current version is {currentVersion}. No need to upgrade");
                     }
                 }
                 if (args[0] == "post-upgrade") 
@@ -90,6 +90,7 @@ namespace fedora_upgrader
             Console.WriteLine("Latest version: {0}", versions.OrderByDescending(n => n).FirstOrDefault());
             return versions.OrderByDescending(n => n).FirstOrDefault();
         }
+
         private static async Task<int> GetLocalVersion()
         {
             string fedoraRelease = await File.ReadAllTextAsync("/etc/fedora-release");
@@ -98,6 +99,7 @@ namespace fedora_upgrader
             Console.WriteLine($"Local version: {strversion}");
             return int.Parse(strversion.Value);
         }
+
         private static void RunCommands(List<string> commands)
         {
             foreach(var command in commands)
