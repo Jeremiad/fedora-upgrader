@@ -1,28 +1,47 @@
-name: .NET
-
 on:
   push:
+    tags:
+      - 'v*'
     branches: [ master ]
   pull_request:
     branches: [ master ]
+name: Create Release
 
 jobs:
   build:
-
+    name: Create release
     runs-on: ubuntu-latest
-
     steps:
-    - uses: actions/checkout@v2
-    - name: Setup .NET
-      uses: actions/setup-dotnet@v1
-      with:
-        dotnet-version: 5.0.x
-    - name: Restore dependencies
-      run: dotnet restore
-    - name: Build Linux version
-      run: dotnet publish -c Release -r linux-x64 -p:PublishSingleFile=true -p:PublishTrimmed=true --self-contained=true --output ./publish
-    - name: Upload a Build Artifact
-      uses: actions/upload-artifact@v2.2.3
-      with:
-        name: fedora-upgrader
-        path: ./publish/fedora-upgrader
+      - name: Checkout code
+        uses: actions/checkout@v2
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v1
+        with:
+          dotnet-version: 5.0.x
+      - name: Restore dependencies
+        run: dotnet restore
+      - name: Build Linux version
+        run: dotnet publish -c Release -r linux-x64 -p:PublishSingleFile=true -p:PublishTrimmed=true --self-contained=true --output ./publish
+      - name: 'Gzip artifact'
+        run: 'tar -czvf fedora-upgrader.tar.gz ./publish/fedora-upgrader'
+      - name: Upload a Build Artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: fedora-upgrader
+          path: ./publish/fedora-upgrader
+          if-no-files-found: error
+      
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # This token is provided by Actions, you do not need to create your own token
+        with:
+          tag_name: ${{ github.ref }}
+          release_name: Release ${{ github.ref }}
+          body: |
+            Changes in this Release
+            - First Change
+            - Second Change
+          draft: true
+          prerelease: false
