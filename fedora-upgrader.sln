@@ -8,8 +8,9 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{2D97D9BF-AA59-4DB9-9AD8-9A79CFABAD1C}"
 	ProjectSection(SolutionItems) = preProject
 		.gitignore = .gitignore
-		.github\workflows\dotnet.yml = .github\workflows\dotnet.yml
+		.github\workflows\build.yml = .github\workflows\build.yml
 		README.md = README.md
+		.github\workflows\release.yml = .github\workflows\release.yml
 	EndProjectSection
 EndProject
 Global

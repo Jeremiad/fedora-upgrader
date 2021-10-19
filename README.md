@@ -8,4 +8,4 @@ Tool for running Fedora upgrade and Post-upgrade process described on page: http
 ``` fedora-upgrade post-upgrade ```
 
 
-[![.NET](https://github.com/Jeremiad/fedora-upgrader/actions/workflows/dotnet.yml/badge.svg)](https://github.com/Jeremiad/fedora-upgrader/actions/workflows/dotnet.yml)
+[![.NET](https://github.com/Jeremiad/fedora-upgrader/actions/workflows/build.yml/badge.svg)](https://github.com/Jeremiad/fedora-upgrader/actions/workflows/build.yml)
