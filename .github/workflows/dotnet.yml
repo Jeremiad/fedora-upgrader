@@ -5,11 +5,11 @@ on:
     branches: [ master ]
   pull_request:
     branches: [ master ]
-name: Create Release
+name: Build and create release
 
 jobs:
   build:
-    name: Create release
+    name: Build and upload artifact
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -28,14 +28,14 @@ jobs:
         uses: actions/upload-artifact@v2
         with:
           name: fedora-upgrader
-          path: ./publish/fedora-upgrader
+          path: fedora-upgrader.tar.gz
           if-no-files-found: error
       
       - name: Create Release
         id: create_release
         uses: actions/create-release@v1
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # This token is provided by Actions, you do not need to create your own token
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           tag_name: ${{ github.ref }}
           release_name: Release ${{ github.ref }}
