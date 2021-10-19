@@ -19,13 +19,6 @@ jobs:
         run: dotnet restore
       - name: Build Linux version
         run: dotnet publish -c Release -r linux-x64 -p:PublishSingleFile=true -p:PublishTrimmed=true --self-contained=true --output ./publish
-      - name: Upload a Build Artifact
-        uses: actions/upload-artifact@v2
-        with:
-          name: fedora-upgrader.zip
-          path: ./publish/fedora-upgrader
-          if-no-files-found: error
-      
       - name: Create Release
         id: create_release
         uses: actions/create-release@v1
@@ -45,6 +38,12 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./publish/
+          asset_path: ./publish/fedora-upgrader
           asset_name: fedora-upgrader
           asset_content_type: application/zip
+      - name: Upload a Build Artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: fedora-upgrader.zip
+          path: ./publish/fedora-upgrader
+          if-no-files-found: error
