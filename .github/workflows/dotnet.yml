@@ -22,13 +22,11 @@ jobs:
         run: dotnet restore
       - name: Build Linux version
         run: dotnet publish -c Release -r linux-x64 -p:PublishSingleFile=true -p:PublishTrimmed=true --self-contained=true --output ./publish
-      - name: 'Gzip artifact'
-        run: 'tar -czvf fedora-upgrader.tar.gz ./publish/fedora-upgrader'
       - name: Upload a Build Artifact
         uses: actions/upload-artifact@v2
         with:
           name: fedora-upgrader
-          path: fedora-upgrader.tar.gz
+          path: ./publish/fedora-upgrader
           if-no-files-found: error
       
       - name: Create Release
