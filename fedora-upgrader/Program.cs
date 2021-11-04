@@ -8,6 +8,7 @@ using System.Text.RegularExpressions;
 using System.Diagnostics;
 using System.Text;
 using System.IO;
+using Serilog;
 
 namespace fedora_upgrader
 {
@@ -17,6 +18,12 @@ namespace fedora_upgrader
         private const string url = "https://ftp.halifax.rwth-aachen.de/fedora/linux/releases/";
         static async Task Main(string[] args)
         {
+            Log.Logger = new LoggerConfiguration()
+                .WriteTo.Console()
+                .WriteTo.File(path: "./fedora-upgrader-.log", rollingInterval: RollingInterval.Day)
+                .MinimumLevel.Information()
+                .CreateLogger();
+
             if (args.FirstOrDefault() != null)
             {
                 if (args[0] == "upgrade")
@@ -29,7 +36,7 @@ namespace fedora_upgrader
                     }
                     else
                     {
-                        Console.WriteLine($"Local version is {localVersion} and current version is {currentVersion}. No need to upgrade");
+                        Log.Information($"Local version is {localVersion} and current version is {currentVersion}. No need to upgrade");
                     }
                 }
                 if (args[0] == "post-upgrade") 
@@ -39,8 +46,10 @@ namespace fedora_upgrader
             }
             else
             {
-                Console.WriteLine("Supported arguments: \n upgrade \n postupgrade");
+                Log.Error("Supported arguments: \n upgrade \n post-upgrade");
             }
+
+            Log.CloseAndFlush();
         }
         private static void Upgrade(int latestVersion)
         {
@@ -87,7 +96,7 @@ namespace fedora_upgrader
                     versions.Add(ushort.Parse(regex.Match(node.InnerText).ToString()));
                 }
             }
-            Console.WriteLine("Latest version: {0}", versions.OrderByDescending(n => n).FirstOrDefault());
+            Log.Information("Latest version: {0}", versions.OrderByDescending(n => n).FirstOrDefault());
             return versions.OrderByDescending(n => n).FirstOrDefault();
         }
 
@@ -96,7 +105,7 @@ namespace fedora_upgrader
             string fedoraRelease = await File.ReadAllTextAsync("/etc/fedora-release");
             var regex = new Regex("[0-9]+");
             var strversion = regex.Match(fedoraRelease);
-            Console.WriteLine($"Local version: {strversion}");
+            Log.Information($"Local version: {strversion}");
             return int.Parse(strversion.Value);
         }
 
@@ -104,7 +113,7 @@ namespace fedora_upgrader
         {
             foreach(var command in commands)
             {
-                Console.WriteLine("Running command: {0}", command);
+                Log.Information("Running command: {0}", command);
                 ProcessStartInfo processStartInfo = new ProcessStartInfo("/usr/bin/sudo", command);
                 processStartInfo.RedirectStandardOutput = true;
                 processStartInfo.RedirectStandardError = true;
@@ -125,7 +134,7 @@ namespace fedora_upgrader
                 process.BeginErrorReadLine();
                 process.BeginOutputReadLine();
                 process.WaitForExit();
-                Console.WriteLine(output);
+                Log.Information(output.ToString());
                 process.Close();
             }
         }
