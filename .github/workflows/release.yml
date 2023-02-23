@@ -18,7 +18,7 @@ jobs:
       - name: Restore dependencies
         run: dotnet restore
       - name: Build Linux version
-        run: dotnet publish -c Release -r linux-x64 --output ./publish -p:PublishSingleFile=true -p:PublishTrimmed=true --self-contained
+        run: dotnet publish -c Release -r linux-x64 -p:PublishSingleFile=true -p:PublishTrimmed=true --self-contained
       - name: Create Release
         id: create_release
         uses: actions/create-release@v3
@@ -38,12 +38,12 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./publish/fedora-upgrader
+          asset_path: ./bin/Release/net7.0/linux-x64/publish/
           asset_name: fedora-upgrader
           asset_content_type: application/zip
       - name: Upload a Build Artifact
         uses: actions/upload-artifact@v3
         with:
           name: fedora-upgrader.zip
-          path: ./publish/fedora-upgrader
+          path: ./bin/Release/net7.0/linux-x64/publish/
           if-no-files-found: error
