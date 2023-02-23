@@ -45,5 +45,5 @@ jobs:
         uses: actions/upload-artifact@v2
         with:
           name: fedora-upgrader.zip
-          path: ./bin/Release/net7.0/linux-x64/publish/
+          path: ./fedora-upgrader/bin/Release/net7.0/linux-x64/publish/
           if-no-files-found: error
