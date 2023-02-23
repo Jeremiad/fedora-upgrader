@@ -2,7 +2,7 @@ name: Build on push
 
 on:
   push:
-    branches: [ master ]
+    branches: [ master, dev ]
   pull_request:
     branches: [ master ]
     
@@ -19,4 +19,4 @@ jobs:
     - name: Restore dependencies
       run: dotnet restore
     - name: Build Linux version
-      run: dotnet publish -c Release -r linux-x64 --output ./publish -p:PublishSingleFile=true -p:PublishTrimmed=true --self-contained
+      run: dotnet publish -c Release -r linux-x64 -p:PublishSingleFile=true -p:PublishTrimmed=true --self-contained
