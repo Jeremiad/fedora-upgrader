@@ -38,7 +38,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./bin/Release/net7.0/linux-x64/publish/
+          asset_path: ./fedora-upgrader/bin/Release/net7.0/linux-x64/publish/
           asset_name: fedora-upgrader
           asset_content_type: application/zip
       - name: Upload a Build Artifact
