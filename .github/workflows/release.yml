@@ -42,7 +42,7 @@ jobs:
           asset_name: fedora-upgrader
           asset_content_type: application/zip
       - name: Upload a Build Artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v2
         with:
           name: fedora-upgrader.zip
           path: ./bin/Release/net7.0/linux-x64/publish/
