@@ -65,6 +65,8 @@ namespace fedora_upgrader
         {
             List<string> commands = new List<string>();
 
+            commands.Add("dnf system-upgrade clean");
+            commands.Add("dnf clean packages");
             commands.Add("dnf install rpmconf -y");
             commands.Add("rpmconf -at");
             commands.Add("dnf repoquery --unsatisfied");
