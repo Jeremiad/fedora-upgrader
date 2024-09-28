@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Net.Http;
 using System.Threading.Tasks;
 using HtmlAgilityPack;
@@ -82,9 +81,9 @@ namespace fedora_upgrader
         }
         private static async Task<int> GetCurrentVersion()
         {
-            HttpClient httpClient = new HttpClient();
-            HtmlDocument document = new HtmlDocument();
-            var regex = new Regex("[0-9]+");
+            HttpClient httpClient = new ();
+            HtmlDocument document = new ();
+            Regex regex = new ("[0-9]+");
             List<ushort> versions = new List<ushort>();
             var html = await httpClient.GetStringAsync(url);
             httpClient.Dispose();
@@ -105,7 +104,7 @@ namespace fedora_upgrader
         private static async Task<int> GetLocalVersion()
         {
             string fedoraRelease = await File.ReadAllTextAsync("/etc/fedora-release");
-            var regex = new Regex("[0-9]+");
+            Regex regex = new ("[0-9]+");
             var strversion = regex.Match(fedoraRelease);
             Log.Information($"Local version: {strversion}");
             return int.Parse(strversion.Value);
@@ -116,15 +115,15 @@ namespace fedora_upgrader
             foreach(var command in commands)
             {
                 Log.Information("Running command: {0}", command);
-                ProcessStartInfo processStartInfo = new ProcessStartInfo("/usr/bin/sudo", command);
+                ProcessStartInfo processStartInfo = new ("/usr/bin/sudo", command);
                 processStartInfo.RedirectStandardOutput = true;
                 processStartInfo.RedirectStandardError = true;
                 processStartInfo.RedirectStandardInput = true;
                 processStartInfo.UseShellExecute = false;
                 processStartInfo.CreateNoWindow = true;
-                Process process = new Process();
+                Process process = new ();
                 process.StartInfo = processStartInfo;
-                StringBuilder output = new StringBuilder();
+                StringBuilder output = new ();
                 process.OutputDataReceived += new DataReceivedEventHandler((SocketsHttpHandler, e) =>
                 {
                     if(!string.IsNullOrEmpty(e.Data))
