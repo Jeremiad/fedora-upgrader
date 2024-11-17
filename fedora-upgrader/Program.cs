@@ -52,30 +52,33 @@ namespace fedora_upgrader
         }
         private static void Upgrade(int latestVersion)
         {
-            List<string> commands = new List<string>();
-            commands.Add("dnf upgrade --refresh -y");
-            commands.Add("dnf install dnf-plugin-system-upgrade -y");
-            commands.Add($"dnf system-upgrade download --refresh --releasever={latestVersion} -y");
-            commands.Add("dnf system-upgrade reboot");
+            List<string> commands =
+            [
+                "dnf upgrade --refresh -y",
+                "dnf install dnf-plugin-system-upgrade -y",
+                $"dnf system-upgrade download --refresh --releasever={latestVersion} -y",
+                "dnf system-upgrade reboot",
+            ];
 
             RunCommands(commands);
         }
         private static void PostUpgrade()
         {
-            List<string> commands = new List<string>();
-
-            commands.Add("dnf system-upgrade clean");
-            commands.Add("dnf clean packages");
-            commands.Add("dnf install rpmconf -y");
-            commands.Add("rpmconf -at");
-            commands.Add("dnf repoquery --unsatisfied");
-            commands.Add("dnf repoquery --duplicates");
-            commands.Add("dnf list extras");
-            commands.Add(@"dnf remove $(dnf repoquery --extras --exclude=kernel,kernel-\*)");
-            commands.Add("dnf autoremove -y");
-            commands.Add("dnf install symlinks -y");
-            commands.Add("symlinks -r /usr | grep dangling");
-            commands.Add("symlinks -r -d /usr");
+            List<string> commands =
+            [
+                "dnf system-upgrade clean",
+                "dnf clean packages",
+                "dnf install rpmconf -y",
+                "rpmconf -at",
+                "dnf repoquery --unsatisfied",
+                "dnf repoquery --duplicates",
+                "dnf list extras",
+                @"dnf remove $(dnf repoquery --extras --exclude=kernel,kernel-\*)",
+                "dnf autoremove -y",
+                "dnf install symlinks -y",
+                "symlinks -r /usr | grep dangling",
+                "symlinks -r -d /usr",
+            ];
 
             RunCommands(commands);
         }
@@ -83,8 +86,8 @@ namespace fedora_upgrader
         {
             HttpClient httpClient = new ();
             HtmlDocument document = new ();
-            Regex regex = new ("[0-9]+");
-            List<ushort> versions = new List<ushort>();
+            Regex regex = new("[0-9]+");
+            List<ushort> versions = new();
             var html = await httpClient.GetStringAsync(url);
             httpClient.Dispose();
             document.LoadHtml(html);
@@ -115,13 +118,13 @@ namespace fedora_upgrader
             foreach(var command in commands)
             {
                 Log.Information("Running command: {0}", command);
-                ProcessStartInfo processStartInfo = new ("/usr/bin/sudo", command);
+                ProcessStartInfo processStartInfo = new("/usr/bin/sudo", command);
                 processStartInfo.RedirectStandardOutput = true;
                 processStartInfo.RedirectStandardError = true;
                 processStartInfo.RedirectStandardInput = true;
                 processStartInfo.UseShellExecute = false;
                 processStartInfo.CreateNoWindow = true;
-                Process process = new ();
+                Process process = new();
                 process.StartInfo = processStartInfo;
                 StringBuilder output = new ();
                 process.OutputDataReceived += new DataReceivedEventHandler((SocketsHttpHandler, e) =>

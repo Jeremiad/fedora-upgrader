@@ -14,7 +14,7 @@ jobs:
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: 8.0.x
+          dotnet-version: 9.0.x
       - name: Restore dependencies
         run: dotnet restore
       - name: Build Linux version
@@ -38,12 +38,12 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./fedora-upgrader/bin/Release/net8.0/linux-x64/publish/fedora-upgrader
+          asset_path: ./fedora-upgrader/bin/Release/net9.0/linux-x64/publish/fedora-upgrader
           asset_name: fedora-upgrader
           asset_content_type: application/zip
       - name: Upload a Build Artifact
         uses: actions/upload-artifact@v3
         with:
           name: fedora-upgrader.zip
-          path: ./fedora-upgrader/bin/Release/net8.0/linux-x64/publish/
+          path: ./fedora-upgrader/bin/Release/net9.0/linux-x64/publish/
           if-no-files-found: error
