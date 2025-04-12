@@ -68,16 +68,18 @@ namespace fedora_upgrader
             [
                 "dnf system-upgrade clean",
                 "dnf clean packages",
-                "dnf install rpmconf -y",
+                "dnf install rpmconf remove-retired-packages clean-rpm-gpg-pubkey symlinks dracut-config-rescue -y",
+                //"remove-retired-packages",
                 "rpmconf -at",
                 "dnf repoquery --unsatisfied",
                 "dnf repoquery --duplicates",
-                "dnf list extras",
+                "dnf remove --duplicates",
+                "dnf list --extras",
                 @"dnf remove $(dnf repoquery --extras --exclude=kernel,kernel-\*)",
                 "dnf autoremove -y",
-                "dnf install symlinks -y",
                 "symlinks -r /usr | grep dangling",
                 "symlinks -r -d /usr",
+                "clean-rpm-gpg-pubkey",
             ];
 
             RunCommands(commands);
@@ -87,7 +89,7 @@ namespace fedora_upgrader
             HttpClient httpClient = new ();
             HtmlDocument document = new ();
             Regex regex = new("[0-9]+");
-            List<ushort> versions = new();
+            List<ushort> versions = [];
             var html = await httpClient.GetStringAsync(url);
             httpClient.Dispose();
             document.LoadHtml(html);
@@ -118,14 +120,18 @@ namespace fedora_upgrader
             foreach(var command in commands)
             {
                 Log.Information("Running command: {0}", command);
-                ProcessStartInfo processStartInfo = new("/usr/bin/sudo", command);
-                processStartInfo.RedirectStandardOutput = true;
-                processStartInfo.RedirectStandardError = true;
-                processStartInfo.RedirectStandardInput = true;
-                processStartInfo.UseShellExecute = false;
-                processStartInfo.CreateNoWindow = true;
-                Process process = new();
-                process.StartInfo = processStartInfo;
+                ProcessStartInfo processStartInfo = new("/usr/bin/sudo", command)
+                {
+                    RedirectStandardOutput = true,
+                    RedirectStandardError = true,
+                    RedirectStandardInput = true,
+                    UseShellExecute = false,
+                    CreateNoWindow = true
+                };
+                Process process = new()
+                {
+                    StartInfo = processStartInfo
+                };
                 StringBuilder output = new ();
                 process.OutputDataReceived += new DataReceivedEventHandler((SocketsHttpHandler, e) =>
                 {
