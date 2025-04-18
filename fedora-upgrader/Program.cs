@@ -57,7 +57,7 @@ namespace fedora_upgrader
                 "dnf upgrade --refresh -y",
                 "dnf install dnf-plugin-system-upgrade -y",
                 $"dnf system-upgrade download --refresh --releasever={latestVersion} -y",
-                "dnf system-upgrade reboot",
+                "dnf system-upgrade reboot -y",
             ];
 
             RunCommands(commands);
