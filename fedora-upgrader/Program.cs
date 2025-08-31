@@ -52,7 +52,7 @@ namespace fedora_upgrader
             }
             else
             {
-                Log.Error("Supported arguments: \n upgrade \n post-upgrade");
+                Log.Error("Supported arguments: \n upgrade \n post-upgrade \n version-check");
             }
             Log.CloseAndFlush();
         }
