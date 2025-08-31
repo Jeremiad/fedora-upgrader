@@ -8,6 +8,7 @@ using System.Diagnostics;
 using System.Text;
 using System.IO;
 using Serilog;
+using Serilog.Core;
 
 namespace fedora_upgrader
 {
@@ -42,12 +43,17 @@ namespace fedora_upgrader
                 {
                     PostUpgrade();
                 }
+                if (args[0] == "version-check")
+                {
+                    Log.Information("Checking versions...");
+                    Log.Information("Local version: {0}", await GetLocalVersion());
+                    Log.Information("Current version: {0}", await GetCurrentVersion());
+                }
             }
             else
             {
                 Log.Error("Supported arguments: \n upgrade \n post-upgrade");
             }
-
             Log.CloseAndFlush();
         }
         private static void Upgrade(int latestVersion)
