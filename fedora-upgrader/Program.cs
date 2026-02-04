@@ -8,7 +8,6 @@ using System.Diagnostics;
 using System.Text;
 using System.IO;
 using Serilog;
-using Serilog.Core;
 
 namespace fedora_upgrader
 {
