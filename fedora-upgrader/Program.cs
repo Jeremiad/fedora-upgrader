@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Net.Http;
 using System.Threading.Tasks;
 using HtmlAgilityPack;
@@ -13,8 +14,10 @@ namespace fedora_upgrader
 {
     class Program
     {
-        //private const string url = "http://www.nic.funet.fi/pub/mirrors/fedora.redhat.com/pub/fedora/linux/releases/";
-        private const string url = "https://ftp.halifax.rwth-aachen.de/fedora/linux/releases/";
+        private const string url = "https://www.nic.funet.fi/pub/mirrors/fedora.redhat.com/pub/fedora/linux/releases/";
+        //private const string url = "https://ftp.halifax.rwth-aachen.de/fedora/linux/releases/";
+        private static readonly HttpClient httpClient = new();
+
         static async Task Main(string[] args)
         {
             Log.Logger = new LoggerConfiguration()
@@ -23,38 +26,66 @@ namespace fedora_upgrader
                 .MinimumLevel.Information()
                 .CreateLogger();
 
-            if (args.FirstOrDefault() != null)
+            try
             {
-                if (args[0] == "upgrade")
+                if (args.Length == 0)
                 {
-                    int localVersion = await GetLocalVersion();
-                    int currentVersion = await GetCurrentVersion();
-                    if (localVersion < currentVersion)
-                    {
-                        Upgrade(currentVersion);
-                    }
-                    else
-                    {
-                        Log.Information($"Local version is {localVersion} and current version is {currentVersion}. No need to upgrade");
-                    }
+                    Log.Error("Supported arguments: \n upgrade \n post-upgrade \n version-check");
+                    return;
                 }
-                if (args[0] == "post-upgrade") 
+
+                switch (args[0])
                 {
-                    PostUpgrade();
-                }
-                if (args[0] == "version-check")
-                {
-                    Log.Information("Checking versions...");
-                    Log.Information("Local version: {0}", await GetLocalVersion());
-                    Log.Information("Current version: {0}", await GetCurrentVersion());
+                    case "upgrade":
+                        if (!IsRunningAsRoot())
+                        {
+                            Log.Error("This command must be run as root. Please re-run with 'sudo' or as the root user.");
+                            return;
+                        }
+                        int localVersion = await GetLocalVersion();
+                        int currentVersion = await GetCurrentVersion();
+                        if (localVersion < currentVersion)
+                        {
+                            Upgrade(currentVersion);
+                        }
+                        else
+                        {
+                            Log.Information("Local version is {LocalVersion} and current version is {CurrentVersion}. No need to upgrade", localVersion, currentVersion);
+                        }
+                        break;
+                    case "post-upgrade":
+                        if (!IsRunningAsRoot())
+                        {
+                            Log.Error("This command must be run as root. Please re-run with 'sudo' or as the root user.");
+                            return;
+                        }
+                        PostUpgrade();
+                        break;
+                    case "version-check":
+                        Log.Information("Checking versions...");
+                        Log.Information("Local version: {LocalVersion}", await GetLocalVersion());
+                        Log.Information("Current version: {CurrentVersion}", await GetCurrentVersion());
+                        break;
+                    default:
+                        Log.Error("Unknown argument: {Argument}. Supported arguments: upgrade, post-upgrade, version-check", args[0]);
+                        break;
                 }
             }
-            else
+            catch (Exception ex)
             {
-                Log.Error("Supported arguments: \n upgrade \n post-upgrade \n version-check");
+                Log.Fatal(ex, "An unhandled exception occurred");
             }
-            Log.CloseAndFlush();
+            finally
+            {
+                Log.CloseAndFlush();
+            }
         }
+
+        private static bool IsRunningAsRoot()
+        {
+            return Environment.IsPrivilegedProcess;
+        }
+
         private static void Upgrade(int latestVersion)
         {
             List<string> commands =
@@ -64,67 +95,126 @@ namespace fedora_upgrader
                 $"dnf system-upgrade download --refresh --releasever={latestVersion} -y",
                 "dnf system-upgrade reboot -y",
             ];
-
             RunCommands(commands);
         }
+
         private static void PostUpgrade()
         {
             List<string> commands =
             [
-                "dnf system-upgrade clean",
-                "dnf clean packages",
+                //"dnf system-upgrade clean",
+                //"dnf clean packages",
                 "dnf install rpmconf remove-retired-packages clean-rpm-gpg-pubkey symlinks dracut-config-rescue -y",
-                //"remove-retired-packages",
+                //"remove-retired-packages", // Requires interaction, so disabled for now
                 "rpmconf -at",
-                "dnf repoquery --unsatisfied",
                 "dnf repoquery --duplicates",
                 "dnf remove --duplicates",
                 "dnf list --extras",
-                @"dnf remove $(dnf repoquery --extras --exclude=kernel,kernel-\*)",
+                @"dnf remove $(sudo dnf repoquery --extras --exclude=kernel,kernel-\*,kmod-\*)",
                 "dnf autoremove -y",
                 "symlinks -r /usr | grep dangling",
                 "symlinks -r -d /usr",
                 "clean-rpm-gpg-pubkey",
+                "dracut-config-rescue",
             ];
-
             RunCommands(commands);
+            RemoveOldKernels();
         }
+
+        private static void RemoveOldKernels()
+        {
+            Log.Information("Checking for old kernels to remove...");
+
+            string script = """
+                #!/usr/bin/env bash
+                old_kernels=($(dnf repoquery --installonly --latest-limit=-1 -q))
+                if [ "${#old_kernels[@]}" -eq 0 ]; then
+                    echo "No old kernels found"
+                    exit 0
+                fi
+                if ! dnf remove "${old_kernels[@]}"; then
+                    echo "Failed to remove old kernels"
+                    exit 1
+                fi
+                echo "Removed old kernels"
+                exit 0
+                """;
+
+            ProcessStartInfo processStartInfo = new("/usr/bin/bash", ["-c", script])
+            {
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+                UseShellExecute = false,
+                CreateNoWindow = true
+            };
+
+            using Process process = new() { StartInfo = processStartInfo };
+
+            StringBuilder output = new();
+            StringBuilder error = new();
+
+            process.OutputDataReceived += (_, e) =>
+            {
+                if (!string.IsNullOrEmpty(e.Data))
+                    output.AppendLine(e.Data);
+            };
+            process.ErrorDataReceived += (_, e) =>
+            {
+                if (!string.IsNullOrEmpty(e.Data))
+                    error.AppendLine(e.Data);
+            };
+
+            process.Start();
+            process.BeginOutputReadLine();
+            process.BeginErrorReadLine();
+            process.WaitForExit();
+
+            if (output.Length > 0)
+                Log.Information("Output:\n{Output}", output);
+            if (error.Length > 0)
+                Log.Warning("Stderr:\n{Error}", error);
+
+            if (process.ExitCode != 0)
+                Log.Error("RemoveOldKernels exited with code {ExitCode}", process.ExitCode);
+        }
+
         private static async Task<int> GetCurrentVersion()
         {
-            HttpClient httpClient = new ();
-            HtmlDocument document = new ();
+            HtmlDocument document = new();
             Regex regex = new("[0-9]+");
             List<ushort> versions = [];
             var html = await httpClient.GetStringAsync(url);
-            httpClient.Dispose();
             document.LoadHtml(html);
             var nodes = document.DocumentNode.SelectNodes("//a/@href");
 
             foreach (var node in nodes)
             {
-                if (!string.IsNullOrEmpty(regex.Match(node.InnerText).ToString()))
+                var match = regex.Match(node.InnerText).Value;
+                if (!string.IsNullOrEmpty(match))
                 {
-                    versions.Add(ushort.Parse(regex.Match(node.InnerText).ToString()));
+                    versions.Add(ushort.Parse(match));
                 }
             }
-            Log.Information("Latest version: {0}", versions.OrderByDescending(n => n).FirstOrDefault());
-            return versions.OrderByDescending(n => n).FirstOrDefault();
+
+            var latest = versions.OrderByDescending(n => n).FirstOrDefault();
+            Log.Information("Latest version: {LatestVersion}", latest);
+            return latest;
         }
 
         private static async Task<int> GetLocalVersion()
         {
             string fedoraRelease = await File.ReadAllTextAsync("/etc/fedora-release");
-            Regex regex = new ("[0-9]+");
+            Regex regex = new("[0-9]+");
             var strversion = regex.Match(fedoraRelease);
-            Log.Information($"Local version: {strversion}");
+            Log.Information("Local version: {LocalVersion}", strversion.Value);
             return int.Parse(strversion.Value);
         }
 
         private static void RunCommands(List<string> commands)
         {
-            foreach(var command in commands)
+            foreach (var command in commands)
             {
-                Log.Information("Running command: {0}", command);
+                Log.Information("Running command: {Command}", command);
                 ProcessStartInfo processStartInfo = new("/usr/bin/sudo", command)
                 {
                     RedirectStandardOutput = true,
@@ -133,24 +223,42 @@ namespace fedora_upgrader
                     UseShellExecute = false,
                     CreateNoWindow = true
                 };
-                Process process = new()
+
+                using Process process = new()
                 {
                     StartInfo = processStartInfo
                 };
-                StringBuilder output = new ();
-                process.OutputDataReceived += new DataReceivedEventHandler((SocketsHttpHandler, e) =>
+
+                StringBuilder output = new();
+                StringBuilder error = new();
+
+                process.OutputDataReceived += (_, e) =>
                 {
-                    if(!string.IsNullOrEmpty(e.Data))
+                    if (!string.IsNullOrEmpty(e.Data))
                     {
-                        output.Append(e.Data +"\n");
+                        output.AppendLine(e.Data);
                     }
-                });
+                };
+                process.ErrorDataReceived += (_, e) =>
+                {
+                    if (!string.IsNullOrEmpty(e.Data))
+                    {
+                        error.AppendLine(e.Data);
+                    }
+                };
+
                 process.Start();
-                process.BeginErrorReadLine();
                 process.BeginOutputReadLine();
+                process.BeginErrorReadLine();
                 process.WaitForExit();
-                Log.Information(output.ToString());
-                process.Close();
+
+                if (output.Length > 0)
+                    Log.Information("Output:\n{Output}", output);
+                if (error.Length > 0)
+                    Log.Warning("Stderr:\n{Error}", error);
+
+                if (process.ExitCode != 0)
+                    Log.Error("Command {Command} exited with code {ExitCode}", command, process.ExitCode);
             }
         }
     }

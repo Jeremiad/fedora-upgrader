@@ -2,13 +2,21 @@
 
 Tool for running Fedora upgrade and Post-upgrade process described on page: https://docs.fedoraproject.org/en-US/quick-docs/dnf-system-upgrade/
 
-## Upgrade
+## Commands
 
-``` fedora-upgrade upgrade ```
+### Upgrade
 
-## Optional post-upgrade tasks
+``` fedora-upgrader upgrade ```
 
-``` fedora-upgrade post-upgrade ```
+### Optional post-upgrade tasks
+
+``` fedora-upgrader post-upgrade ```
+
+### Version check
+
+Check local and latest available Fedora versions:
+
+``` fedora-upgrader version-check ```
 
 ## Usage problems
 
