@@ -84,7 +84,6 @@ namespace fedora_upgrader
                 "dnf autoremove -y",
                 "symlinks -r /usr | grep dangling",
                 "symlinks -r -d /usr",
-                "clean-rpm-gpg-pubkey",
             ];
 
             RunCommands(commands);
